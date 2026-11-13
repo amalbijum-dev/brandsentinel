@@ -1,6 +1,6 @@
 # BrandSentinel
 
-AI-assisted brand governance: checks content against your brand kit before publication, explains every finding, and keeps humans in control of approvals.
+AI-assisted brand governance: checks content against your brand kit before publication, explains every finding and keeps humans in control of approvals.
 
 ## Run it
 ```bash
