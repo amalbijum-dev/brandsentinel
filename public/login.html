@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sign in · BrandSentinel</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%238ba7ff'/%3E%3Cpath d='M16 7l7 2.6v5.8c0 4.2-3 7.2-7 8.4-4-1.2-7-4.2-7-8.4V9.6z' fill='%2309090b'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/auth.css">
+</head>
+<body class="auth-compact">
+<main class="card">
+  <div class="brand"><i></i>BrandSentinel</div>
+  <h1 id="title">Welcome <em>back.</em></h1>
+  <p class="sub" id="sub">AI brand checks for every post, poster and reel.</p>
+
+  <!-- One-click demo access for reviewers -->
+  <section class="demo-card" id="demoCard" hidden>
+    <div class="demo-head"><span class="demo-title">Just looking around?</span><span class="demo-note">Try it free, no sign-up</span></div>
+    <div class="demo-btns">
+      <button type="button" class="demo-btn" id="demoManager"><b>Demo Manager</b><small>Brand kit &amp; approvals</small></button>
+      <button type="button" class="demo-btn" id="demoEmployee"><b>Demo Employee</b><small>Upload &amp; get findings</small></button>
+    </div>
+  </section>
+
+  <div class="divider" id="divider" hidden><span>or sign in with your account</span></div>
+
+  <form id="form" novalidate>
+    <div class="seg-role" role="radiogroup" aria-label="Sign in as">
+      <button type="button" class="seg-opt active" id="optManager" role="radio" aria-checked="true">Manager</button>
+      <button type="button" class="seg-opt" id="optEmployee" role="radio" aria-checked="false">Employee</button>
+    </div>
+    <p class="role-hint" id="roleHint">Edit the brand kit, review findings and approve content.</p>
+
+    <div id="setupOnly" hidden>
+      <div class="two">
+        <div><label for="name">Your name</label><input id="name" autocomplete="name" maxlength="80" placeholder="Alex Morgan"></div>
+        <div><label for="org">Organisation</label><input id="org" maxlength="100" placeholder="Northfield College"></div>
+      </div>
+    </div>
+    <label for="email" id="emailLabel">Email</label>
+    <input id="email" type="email" autocomplete="email" required maxlength="120" placeholder="you@company.com">
+    <label for="password">Password</label>
+    <div class="pw"><input id="password" type="password" autocomplete="current-password" required maxlength="200"><button type="button" id="toggle">Show</button></div>
+    <ul id="pwRules" hidden></ul>
+    <div class="field-tip" id="pwTip">Case-sensitive. Forgot it? A manager can reset it from Team.</div>
+
+    <button class="btn" id="go" type="submit">Sign in as Manager</button>
+    <div class="msg" id="msg" role="alert"></div>
+  </form>
+  <div class="alt" id="alt">New here? <a href="/signup.html">Create an account</a><span id="shareWrap" hidden> · <button type="button" class="linkbtn" id="copyDemo">Copy demo link</button></span></div>
+</main>
+<script src="/auth-validate.js"></script>
+<script src="/login.js"></script>
+<script src="/vendor/gsap.min.js"></script>
+<script src="/motion.js" defer></script>
+<script src="/bg.js"></script>
+<script src="/login-hero.js"></script>
+</body>
+</html>
