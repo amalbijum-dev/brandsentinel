@@ -1,63 +1,174 @@
 # BrandSentinel
 
-AI-assisted brand governance: checks content against your brand kit before publication, explains every finding and keeps humans in control of approvals.
+BrandSentinel checks marketing content against a brand's rules before it gets published. You upload a poster, a social post, a PDF or a short video, and it tells you what's wrong with it: a date that doesn't match the event details, a missing registration link, a banned spelling of the brand name, text that's hard to read, a claim nobody can back up.
 
-## Run it
+It doesn't approve anything by itself. Whoever made the content goes through the findings, and a manager signs off at the end.
+
+We built it for the Inkloom AI Hackathon after noticing how often student-fest posters went out with the wrong date or venue, even though a "brand guidelines" PDF existed somewhere.
+
+**Live site:** [brandsentinel-xymj.onrender.com](https://brandsentinel-xymj.onrender.com/login.html)
+
+If you just want to look around, use the demo buttons on the sign-in page, or go straight in:
+
+- [Open as a manager](https://brandsentinel-xymj.onrender.com/demo): brand kit, reviews, approvals
+- [Open as an employee](https://brandsentinel-xymj.onrender.com/demo/employee): upload content and see what gets flagged
+
+No sign-up needed. A sample brand kit for a made-up college fest is already loaded.4
+
+---
+
+## Trying it out
+
+Sign in as the demo employee, open **New check**, and paste this:
+
+```
+Spectrum-Fest is back on 15 March. Free entry for all, best fest ever!
+```
+
+Run the check. It should flag the wrong date (the kit says 14 March), the hyphen in the brand name, the "best fest ever" claim, the free-entry claim (outsiders pay ₹200), and the missing venue, time and registration link.
+
+From there you can:
+
+- respond to each finding: accept it, say you fixed it your own way, reject it, or mark the guideline as unclear
+- revise the text and run the check again, which keeps the old version
+- submit it for review
+
+Then sign in as the demo manager. You'll see it waiting on the dashboard. You can reply to individual findings, send it back, or approve it.
+
+Images, PDFs and videos work the same way. For videos it looks at keyframes for the visuals and listens to the audio separately, so a wrong date said out loud gets caught too.
+
+---
+
+## What's in it
+
+**For people making content**
+
+- checks text, images, PDFs and videos (up to 9 files at once, videos up to 60 MB)
+- every finding says what's wrong, which rule it breaks, and how to fix it, often with replacement text you can copy
+- findings are marked as either confirmed or "possible", so you know what to double-check
+- each report also lists what it couldn't check
+
+**For managers**
+
+- a brand kit: guidelines, approved facts, words to avoid, required info per content type, colour palette and logos
+- you can import guidelines from a PDF instead of retyping them
+- a review pipeline (Draft, Legal review, AI check, Brand check, Final check, Approved) with replies, comments and version history
+- an Insights page that shows which mistakes keep coming up and which guidelines people keep marking as unclear
+- team management, an audit log, and a JSON export of everything
+
+**Under the hood**
+
+- Gemini does the reading and reviewing; a separate rule engine handles checklists, banned words, colour distance and contrast, so those give the same answer every time
+- claims are cross-checked against the approved facts without the AI, and disagreements are flagged for a person
+- Aadhaar and PAN numbers are stripped out before anything is sent to the AI, and emails and phone numbers are too by default
+
+---
+
+## Running it yourself
+
+You'll need Node.js 20 or newer and a Gemini API key (free from [Google AI Studio](https://aistudio.google.com/apikey)).
+
 ```bash
+git clone https://github.com/amalbijum-dev/brandsentinel.git
+cd brandsentinel
 npm install
-cp .env.example .env     # Windows: Copy-Item .env.example .env
-# put your Gemini key in .env
-npm start                # http://localhost:5000
+cp .env.example .env
 ```
-First visit: create the **manager** account. The manager adds creators and reviewers under *Team*, then opens *Brand kit* and clicks **Load demo kit** (a fictional college-fest kit) or adds real guidelines.
 
-Without a Gemini key the app still runs, using only the rule-based checks.
+On Windows PowerShell, use `Copy-Item .env.example .env` instead of `cp`.
 
-## Features
-| Planned feature | Where |
-|---|---|
-| Required-information checklists (OCR + match) | Brand kit → checklists; deterministic pattern matching on pasted text and text read from images/PDF |
-| Video / reel review | New check → upload a video; the browser picks keyframes at scene changes (max 8). **Full video review** at `/video-check.html` (or `POST /api/video-check`) sends the whole video to Gemini: speech, on-screen text and visuals are checked against the brand kit, with timestamps and a weak AI-content signal |
-| Content relevance | Creator states the audience; the AI estimates who the content suits and flags a mismatch |
-| Brand / tone / term rules | Guidelines, wording rules (glossary), approved palette, reference logos |
-| Claim verification | AI verdict plus a non-generative second opinion (closest approved fact + number check); disagreements go to a human |
-| Visual checks | Dominant colours (k-means in the browser) vs palette using CIEDE2000; contrast estimate; alt-text and readability checks |
-| AI-content signal | Weak signal that prompts a disclosure check; never shown as proof |
-| Workflow | AI check → creator accepts/modifies/rejects → legal review (only if sensitive) → manager final check → approved → published |
-| Revision tracking | Every revision is a new version with its own report and decisions |
-| Audit trail | Who did what and when (manager: Audit log) |
-| Insights | Guidelines creators reject or mark "unclear" most |
-| Integrations | REST API (`/api/v1/check`), signed webhooks, in-app notifications |
-| Privacy | Aadhaar/PAN always redacted before the AI call; emails/phones optional; export and delete your data |
+Open `.env`, put your key after `GEMINI_API_KEY=`, then:
 
-## Accounts
-- First visit: `/login.html` creates the manager account.
-- Self sign-up at `/signup.html` creates **creator** accounts only; a manager can turn it off (`allowSignup` setting) and change roles under Team.
-
-## Roles
-- **Creator**: submits content, responds to findings, revises, submits for review.
-- **Reviewer** (legal/compliance): reviews sensitive content.
-- **Manager**: manages the kit, team and settings, gives final approval, marks published.
-
-## REST API
-Generate a key under *Settings & API*, then:
 ```bash
-curl -X POST http://localhost:5000/api/v1/check -H "x-api-key: KEY" \
-  -F title="Fest poster" -F contentType=poster -F audience="first-year students" \
-  -F text="Spectrum Fest 2027 on 14 March..." -F files=@poster.png
-curl http://localhost:5000/api/v1/submissions/ID -H "x-api-key: KEY"
+npm start
 ```
-Webhook events: `analysis.completed`, `submission.status_changed`, signed with HMAC-SHA256 (`x-brandsentinel-signature`).
 
-## Security notes
-- **Never commit `.env`.** If a key was ever shared or placed in `.env.example`, rotate it in Google AI Studio.
-- Passwords use scrypt; sessions are signed HttpOnly SameSite=Strict cookies; state-changing requests need a custom header; CSP is enabled and the UI never uses `innerHTML` for user content.
-- Data is stored in `data/db.json` plus `data/uploads/` (both git-ignored via `data/` below). For real deployments move to Postgres/object storage, set `NODE_ENV=production` behind HTTPS, and review the multer 1.x deprecation notice (upgrade to 2.x).
-- Webhook URLs are set by managers only and are not blocked from private addresses.
+Go to http://localhost:5000. The first time, it asks you to create the organisation and a manager account. After that, open **Brand kit** and either click **Load demo kit** or start adding your own rules.
 
-## Limitations
-- Findings are suggestions. Exact facts (dates, hex colours) are checked by code, but OCR text comes from the AI model.
-- Palette and contrast checks use dominant colours, not the text itself, and are reported as estimates.
-- Logo comparison is a visual AI judgement marked "possible".
-- "Published" is a status; the app does not post to social platforms.
-- Planned but not built: Chrome extension, Slack/WhatsApp notifications, Figma/Docs add-ons, PaddleOCR (Gemini does OCR here).
+The app still runs without a key, but only the rule-based checks work.
+
+### Settings
+
+These go in `.env`. Everything except the key has a sensible default.
+
+```
+GEMINI_API_KEY=            # required for AI checks
+GEMINI_MODEL=gemini-3-flash-preview
+GEMINI_FALLBACK_MODELS=gemini-2.5-flash
+MAX_FILE_MB=12
+MAX_VIDEO_MB=60
+DATA_DIR=data              # where the database and uploads live
+DEMO_MODE=true             # set to false to hide the demo accounts
+OLLAMA_URL=                # optional local model, text only
+```
+
+Set `NODE_ENV=production` when it's running behind HTTPS.
+
+---
+
+## Hosting
+
+The live version runs on Render's free plan:
+
+- build command: `npm install`
+- start command: `npm start`
+- environment variables: `GEMINI_API_KEY`, `NODE_ENV=production`, `DEMO_MODE=true`
+
+Free Render instances go to sleep after 15 minutes, so we have an UptimeRobot monitor hitting the site every few minutes to keep it awake.
+
+One catch: the free plan has no permanent disk, so accounts and submissions disappear whenever the service restarts or redeploys. The demo accounts rebuild themselves, but anything else is lost. If you need data to stick around, add a persistent disk and point `DATA_DIR` at it.
+
+It won't run on Vercel or Netlify. The database is a plain JSON file, so it needs a server that stays running.
+
+---
+
+## API
+
+If you want to run checks from another tool, generate a key under **Settings & API**:
+
+```bash
+curl -X POST https://brandsentinel-xymj.onrender.com/api/v1/check \
+  -H "x-api-key: YOUR_KEY" \
+  -F title="Fest poster" \
+  -F contentType=poster \
+  -F text="Spectrum Fest 2027 on 14 March..." \
+  -F files=@poster.png
+```
+
+You get back a submission with the full report. Fetch it again later with `GET /api/v1/submissions/<id>`.
+
+There's also a webhook setting. It sends `analysis.completed` and `submission.status_changed` events, signed with HMAC-SHA256 in the `x-brandsentinel-signature` header.
+
+---
+
+## Project layout
+
+```
+server.js        routes, login, review workflow, uploads
+lib/analyze.js   builds the prompt, calls Gemini, merges results with the rule checks
+lib/video.js     full-video and audio review
+lib/checks.js    checklist, wording, claim and readability checks
+lib/color.js     colour distance and contrast maths
+lib/pii.js       redaction
+lib/store.js     the JSON database, audit log and notifications
+public/          the whole front end (plain JS, no framework)
+```
+
+---
+
+## Known limitations
+
+- It's a suggestion tool. Text read from images comes from the AI, so it can misread small print.
+- Personal info inside images, PDFs or spoken in videos can't be redacted before it's sent to the AI.
+- Everything is stored in one unencrypted JSON file. Fine for a demo or a small team, not for a company.
+- "Published" is just a status. It doesn't post anywhere.
+
+Things we'd like to add: a Chrome extension, Slack alerts, a Google Docs add-on, and a mode that runs entirely on local models.
+
+---
+
+## Security
+
+Don't commit your `.env` file. If a key ever ends up somewhere public, delete it in Google AI Studio and make a new one.
+
+If you find a security problem, please open an issue or contact the maintainer instead of posting details publicly.
